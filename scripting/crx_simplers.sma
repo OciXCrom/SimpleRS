@@ -1,40 +1,43 @@
 #include <amxmodx>
-#include <colorchat>
+#include <cromchat>
 #include <cstrike>
+#include <formatin>
 #include <fun>
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "2.0"
+#define PH_NAME "<name>"
 
-new g_Message
-new const g_Colors[][] = { "!g", "^x04", "!t", "^x03", "!n", "^x01" }
+new g_pMessage
+new const g_szCommands[][] = { "/rs", "/resetscore" }
 
 public plugin_init()
 {
 	register_plugin("Simple Resetscore", PLUGIN_VERSION, "OciXCrom")
 	register_cvar("CRXSimpleRS", PLUGIN_VERSION, FCVAR_SERVER|FCVAR_SPONLY|FCVAR_UNLOGGED)
-	register_clcmd("say /rs", "cmd_reset")
-	register_clcmd("say_team /rs", "cmd_reset")
-	g_Message = register_cvar("rs_message", "!g[!tSimple Resetscore!g] !t<name> !nhas just reset his score!")
+	g_pMessage = register_cvar("simplers_message", "&x04[&x03Simple Resetscore&x04] &x03<name> &x01has just reset his score!")
+	
+	for(new i; i < sizeof(g_szCommands); i++)
+	{
+		register_clcmd(formatin("say %s", g_szCommands[i]), "Cmd_ResetScore")
+		register_clcmd(formatin("say_team %s", g_szCommands[i]), "Cmd_ResetScore")
+	}
 }
 
-public cmd_reset(id)
+public Cmd_ResetScore(id)
 {
-	new szMessage[256], iTeam = get_user_team(id), iType
-	get_pcvar_string(g_Message, szMessage, charsmax(szMessage))
+	new szMessage[256], iType
+	get_pcvar_string(g_pMessage, szMessage, charsmax(szMessage))
 	
-	for(new i = 0; i < sizeof(g_Colors) - 1; i += 2)
-		replace_all(szMessage, charsmax(szMessage), g_Colors[i], g_Colors[i + 1])
-	
-	if(contain(szMessage, "<name>") != -1)
+	if(contain(szMessage, PH_NAME) != -1)
 	{
 		new szName[32]
 		get_user_name(id, szName, charsmax(szName))
-		replace(szMessage, charsmax(szMessage), "<name>", szName)
+		replace(szMessage, charsmax(szMessage), PH_NAME, szName)
 		iType = 1
 	}
 		
 	set_user_frags(id, 0)
 	cs_set_user_deaths(id, 0)
-	ColorChat(iType ? id : 0, iTeam == 1 ? RED : iTeam == 2 ? BLUE : GREY, "%s", szMessage)
+	CC_SendMatched(iType ? id : 0, id, szMessage)
 	return PLUGIN_HANDLED
 }
