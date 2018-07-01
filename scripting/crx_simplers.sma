@@ -1,11 +1,10 @@
 #include <amxmodx>
 #include <cromchat>
 #include <cstrike>
-#include <formatin>
 #include <fun>
 
-#define PLUGIN_VERSION "2.0"
-#define PH_NAME "<name>"
+#define PLUGIN_VERSION "2.1"
+#define ARG_NAME "<name>"
 
 new g_pMessage
 new const g_szCommands[][] = { "/rs", "/resetscore" }
@@ -17,10 +16,7 @@ public plugin_init()
 	g_pMessage = register_cvar("simplers_message", "&x04[&x03Simple Resetscore&x04] &x03<name> &x01has just reset his score!")
 	
 	for(new i; i < sizeof(g_szCommands); i++)
-	{
-		register_clcmd(formatin("say %s", g_szCommands[i]), "Cmd_ResetScore")
-		register_clcmd(formatin("say_team %s", g_szCommands[i]), "Cmd_ResetScore")
-	}
+		register_chat_command(g_szCommands[i], "Cmd_ResetScore")
 }
 
 public Cmd_ResetScore(id)
@@ -28,11 +24,11 @@ public Cmd_ResetScore(id)
 	new szMessage[256], iType
 	get_pcvar_string(g_pMessage, szMessage, charsmax(szMessage))
 	
-	if(contain(szMessage, PH_NAME) != -1)
+	if(contain(szMessage, ARG_NAME) != -1)
 	{
 		new szName[32]
 		get_user_name(id, szName, charsmax(szName))
-		replace(szMessage, charsmax(szMessage), PH_NAME, szName)
+		replace(szMessage, charsmax(szMessage), ARG_NAME, szName)
 		iType = 1
 	}
 		
@@ -40,4 +36,13 @@ public Cmd_ResetScore(id)
 	cs_set_user_deaths(id, 0)
 	CC_SendMatched(iType ? id : 0, id, szMessage)
 	return PLUGIN_HANDLED
+}
+
+register_chat_command(const szCommand[], const szFunction[])
+{
+	static szTemp[32]
+	formatex(szTemp, charsmax(szTemp), "say %s", szCommand)
+	register_clcmd(szTemp, szFunction)
+	formatex(szTemp, charsmax(szTemp), "say_team %s", szCommand)
+	register_clcmd(szTemp, szFunction)
 }
